@@ -65,22 +65,6 @@ public class UserController {
             return new ResponseEntity<User>(HttpStatus.BAD_REQUEST);
         }
     }
-    
-    @DeleteMapping(path = "/bycpf")
-    public ResponseEntity<User> deleteUser(@RequestParam("cpf") String cpf, Authentication authentication) {
-        try {
-            boolean hasRoleAdmin = CheckRole.hasRoleAdmin(authentication);
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            Optional<User> user = userRepository.getByCPF(cpf);
-            if (hasRoleAdmin || userDetails.getUsername().equals(user.get().getEmail())) {
-                return new ResponseEntity<User>(userRepository.deleteUser(cpf), HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-            }
-        } catch (UserNotFoundException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
 
     @GetMapping("/byemail")
     public ResponseEntity<User> getUserByEmail(@RequestParam String email, Authentication authentication) {
@@ -112,6 +96,22 @@ public class UserController {
             }
         } else {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+    }
+
+    @DeleteMapping(path = "/bycpf")
+    public ResponseEntity<User> deleteUser(@RequestParam("cpf") String cpf, Authentication authentication) {
+        try {
+            boolean hasRoleAdmin = CheckRole.hasRoleAdmin(authentication);
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            Optional<User> user = userRepository.getByCPF(cpf);
+            if (hasRoleAdmin || userDetails.getUsername().equals(user.get().getEmail())) {
+                return new ResponseEntity<User>(userRepository.deleteUser(cpf), HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+        } catch (UserNotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 

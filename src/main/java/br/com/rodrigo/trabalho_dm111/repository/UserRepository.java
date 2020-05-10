@@ -105,20 +105,20 @@ public class UserRepository {
     @PostConstruct
     public void init(){
         User adminUser;
-        Optional<User> optAdminUser = this.getByEmail("matilde@siecola.com.br");
+        Optional<User> optAdminUser = this.getByEmail("rodrigo@inatel.br");
         try {
             if (optAdminUser.isPresent()) {
                 adminUser = optAdminUser.get();
                 if (!adminUser.getRole().equals("ROLE_ADMIN")) {
                     adminUser.setRole("ROLE_ADMIN");
-                    this.updateUser(adminUser, "matilde@siecola.com.br");
+                    this.updateUser(adminUser,"rodrigo@inatel.br");
                 }
             } else {
                 adminUser = new User();
                 adminUser.setRole("ROLE_ADMIN");
                 adminUser.setEnabled(true);
-                adminUser.setPassword("matilde");
-                adminUser.setEmail("matilde@siecola.com.br");
+                adminUser.setPassword("rodrigo");
+                adminUser.setEmail("rodrigo@inatel.br");
                 this.saveUser(adminUser);
             }
         } catch (UserAlreadyExistsException | UserNotFoundException e
