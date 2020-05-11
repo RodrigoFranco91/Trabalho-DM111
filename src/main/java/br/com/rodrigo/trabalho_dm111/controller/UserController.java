@@ -38,7 +38,7 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.PRECONDITION_FAILED);
         }
     }
-
+ 
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     @PutMapping(path = "/byemail")
     public ResponseEntity<User> updateUser(@RequestBody User user, @RequestParam("email") String email, Authentication authentication){
