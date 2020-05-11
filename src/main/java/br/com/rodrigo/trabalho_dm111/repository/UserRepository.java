@@ -105,7 +105,7 @@ public class UserRepository {
     @PostConstruct
     public void init(){
         User adminUser;
-        Optional<User> optAdminUser = this.getByEmail("rodrigo@inatel.br");
+        Optional<User> optAdminUser = getByEmail("rodrigo@inatel.br");
         try {
             if (optAdminUser.isPresent()) {
                 adminUser = optAdminUser.get();
@@ -168,7 +168,6 @@ public class UserRepository {
             }
         }
     }
-
     public Optional<User> getByEmail (String email) {
         log.info("User: " + email);
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
@@ -181,7 +180,6 @@ public class UserRepository {
             return Optional.empty();
         }
     }
-
     public Optional<User> getByCPF (String cpf) {
         log.info("User: " + cpf);
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();

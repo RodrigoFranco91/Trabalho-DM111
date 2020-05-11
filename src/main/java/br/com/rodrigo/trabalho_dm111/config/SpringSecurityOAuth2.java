@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.A
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 
+
 @Configuration
 @EnableAuthorizationServer
 public class SpringSecurityOAuth2 extends AuthorizationServerConfigurerAdapter {
@@ -27,16 +28,18 @@ public class SpringSecurityOAuth2 extends AuthorizationServerConfigurerAdapter {
     private AuthenticationManager authenticationManager;
 
     @Override
-    public void configure(AuthorizationServerEndpointsConfigurer configurer) throws Exception {
+    public void configure(AuthorizationServerEndpointsConfigurer configurer)
+            throws Exception {
         configurer.authenticationManager(authenticationManager);
         configurer.userDetailsService(userDetailsService);
     }
 
     @Override
-    public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
+    public void configure(ClientDetailsServiceConfigurer clients)
+            throws Exception {
+
         clients.inMemory()
-                .withClient("siecola").secret(passwordEncoder.encode(
-                "matilde"))
+                .withClient("rodrigo").secret(passwordEncoder.encode("franco"))
                 .accessTokenValiditySeconds(3600)
                 .scopes("read", "write")
                 .authorizedGrantTypes("password")
