@@ -26,8 +26,8 @@ import java.util.Optional;
 import java.util.logging.Logger;
 
 @RestController
-@RequestMapping(path = "/api/message")
-public class MessageController {
+@RequestMapping(path = "/api/ordermessage")
+public class OrderMessageController {
 
     private static final Logger log = Logger.getLogger("MessageController");
 
