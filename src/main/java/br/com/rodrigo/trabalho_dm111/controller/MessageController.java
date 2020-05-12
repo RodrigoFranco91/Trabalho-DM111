@@ -1,23 +1,32 @@
 package br.com.rodrigo.trabalho_dm111.controller;
 
+import br.com.rodrigo.trabalho_dm111.model.OrderMessage;
+import br.com.rodrigo.trabalho_dm111.model.User;
 import br.com.rodrigo.trabalho_dm111.repository.UserRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.firebase.messaging.Message;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 @RestController
-@RequestMapping(path="/api/message")
+@RequestMapping(path = "/api/message")
 public class MessageController {
 
     private static final Logger log = Logger.getLogger("MessageController");
@@ -43,7 +52,29 @@ public class MessageController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(path = "/sendmessage")
-    public ResponseEntity<String> sendMessage() {
-        return null;
+    public ResponseEntity<OrderMessage> sendMessage(@RequestBody OrderMessage orderMessage) {
+
+        Optional<User> optUser = userRepository.getByCPF(orderMessage.getCpf());
+        if (optUser.isPresent()) {
+            User user = optUser.get();
+            String registrationToken = user.getFcmRegId();
+            try {
+                Message message = Message.builder()
+                        .putData("product", objectMapper.writeValueAsString(orderMessage))
+                        .setToken(registrationToken)
+                        .build();
+
+                String response = FirebaseMessaging.getInstance().send(message);
+                log.info("Mensagem enviada ao usuario " + user.getUsername());
+                log.info("Reposta do FCM: " + response);
+                return new ResponseEntity<OrderMessage>(orderMessage, HttpStatus.OK);
+            } catch (FirebaseMessagingException | JsonProcessingException e) {
+                log.severe("Falha ao enviar mensagem pelo FCM: " + e.getMessage());
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+        }else{
+            log.severe("Usuário não encontrado");
+            return new ResponseEntity<OrderMessage>(HttpStatus.NOT_FOUND);
+        }
     }
 }

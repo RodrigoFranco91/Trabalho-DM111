@@ -2,7 +2,7 @@ package br.com.rodrigo.trabalho_dm111.model;
 
 import java.io.Serializable;
 
-public class Message implements Serializable {
+public class OrderMessage implements Serializable {
 
     private Long orderId;
     private Long userId;
