@@ -9,12 +9,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Logger;
-
+import javax.cache.Cache;
+import javax.cache.CacheException;
+import javax.cache.CacheFactory;
+import javax.cache.CacheManager;
 
 @Repository
 public class UserRepository {
@@ -35,10 +35,10 @@ public class UserRepository {
     private static final String PROPERTY_ENABLED = "enabled";
     private static final String PROPERTY_CPF = "cpf";
     private static final String PROPERTY_SALE_ID = "saleId";
-    private static final String PROPERTY_CRM_ID= "crmId";
+    private static final String PROPERTY_CRM_ID = "crmId";
 
 
-    private void userToEntity (User user, Entity userEntity) {
+    private void userToEntity(User user, Entity userEntity) {
         userEntity.setProperty(PROPERTY_ID, user.getId());
         userEntity.setProperty(PROPERTY_EMAIL, user.getEmail());
         userEntity.setProperty(PROPERTY_PASSWORD, user.getPassword());
@@ -52,7 +52,7 @@ public class UserRepository {
         userEntity.setProperty(PROPERTY_CRM_ID, user.getCrmId());
     }
 
-    private User entityToUser (Entity userEntity) {
+    private User entityToUser(Entity userEntity) {
         User user = new User();
         user.setId(userEntity.getKey().getId());
         user.setEmail((String) userEntity.getProperty(PROPERTY_EMAIL));
@@ -62,21 +62,20 @@ public class UserRepository {
         user.setLastFCMRegister((Date) userEntity.getProperty(PROPERTY_LAST_FCM_REGISTER));
         user.setRole((String) userEntity.getProperty(PROPERTY_ROLE));
         user.setEnabled((Boolean) userEntity.getProperty(PROPERTY_ENABLED));
-        user.setCpf((String)userEntity.getProperty(PROPERTY_CPF));
-        user.setSaleId((Long)userEntity.getProperty(PROPERTY_SALE_ID));
-        user.setCrmId((Long)userEntity.getProperty(PROPERTY_CRM_ID));
+        user.setCpf((String) userEntity.getProperty(PROPERTY_CPF));
+        user.setSaleId((Long) userEntity.getProperty(PROPERTY_SALE_ID));
+        user.setCrmId((Long) userEntity.getProperty(PROPERTY_CRM_ID));
         return user;
     }
 
-    private boolean checkIfEmailExist (User user) {
+    private boolean checkIfEmailExist(User user) {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Query.Filter filter = new Query.FilterPredicate(PROPERTY_EMAIL, Query.FilterOperator.EQUAL, user.getEmail());
         Query query = new Query(USER_KIND).setFilter(filter);
         Entity userEntity = datastore.prepare(query).asSingleEntity();
         if (userEntity == null) {
             return false;
-        }
-        else {
+        } else {
             if (user.getId() == null) {
                 return true;
             } else {
@@ -85,15 +84,14 @@ public class UserRepository {
         }
     }
 
-    private boolean checkIfCPFExist (User user) {
+    private boolean checkIfCPFExist(User user) {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Query.Filter filter = new Query.FilterPredicate(PROPERTY_CPF, Query.FilterOperator.EQUAL, user.getCpf());
         Query query = new Query(USER_KIND).setFilter(filter);
         Entity userEntity = datastore.prepare(query).asSingleEntity();
         if (userEntity == null) {
             return false;
-        }
-        else {
+        } else {
             if (user.getId() == null) {
                 return true;
             } else {
@@ -103,7 +101,7 @@ public class UserRepository {
     }
 
     @PostConstruct
-    public void init(){
+    public void init() {
         User adminUser;
         Optional<User> optAdminUser = getByEmail("rodrigo@inatel.br");
         try {
@@ -111,7 +109,7 @@ public class UserRepository {
                 adminUser = optAdminUser.get();
                 if (!adminUser.getRole().equals("ROLE_ADMIN")) {
                     adminUser.setRole("ROLE_ADMIN");
-                    this.updateUser(adminUser,"rodrigo@inatel.br");
+                    this.updateUser(adminUser, "rodrigo@inatel.br");
                 }
             } else {
                 adminUser = new User();
@@ -127,33 +125,33 @@ public class UserRepository {
         }
     }
 
-    public User saveUser (User user) throws UserAlreadyExistsException {
+    public User saveUser(User user) throws UserAlreadyExistsException {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        if ((!checkIfEmailExist (user)) && (!checkIfCPFExist(user))) {
+        if ((!checkIfEmailExist(user)) && (!checkIfCPFExist(user))) {
             Key userKey = KeyFactory.createKey(USER_KIND, USER_KEY);
             Entity userEntity = new Entity(USER_KIND, userKey);
             user.setPassword(passwordEncoder.encode(user.getPassword()));
-            userToEntity (user, userEntity);
+            userToEntity(user, userEntity);
             datastore.put(userEntity);
             user.setId(userEntity.getKey().getId());
             return user;
         } else {
-            if(checkIfEmailExist(user)){
+            if (checkIfEmailExist(user)) {
                 throw new UserAlreadyExistsException("Usuário " + user.getEmail() + " já existe");
-            }else{
+            } else {
                 throw new UserAlreadyExistsException("Usuário " + user.getCpf() + " já existe");
             }
         }
     }
 
-    public User updateUser (User user, String email) throws UserNotFoundException, UserAlreadyExistsException {
-        if ((!checkIfEmailExist (user)) && (!checkIfCPFExist(user)))  {
+    public User updateUser(User user, String email) throws UserNotFoundException, UserAlreadyExistsException {
+        if ((!checkIfEmailExist(user)) && (!checkIfCPFExist(user))) {
             DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
             Query.Filter emailFilter = new Query.FilterPredicate(PROPERTY_EMAIL, Query.FilterOperator.EQUAL, email);
             Query query = new Query(USER_KIND).setFilter(emailFilter);
             Entity userEntity = datastore.prepare(query).asSingleEntity();
             if (userEntity != null) {
-                userToEntity (user, userEntity);
+                userToEntity(user, userEntity);
                 datastore.put(userEntity);
                 user.setId(userEntity.getKey().getId());
                 return user;
@@ -161,14 +159,15 @@ public class UserRepository {
                 throw new UserNotFoundException("Usuário " + email + " não encontrado");
             }
         } else {
-            if(checkIfEmailExist(user)){
+            if (checkIfEmailExist(user)) {
                 throw new UserAlreadyExistsException("Usuário " + user.getEmail() + " já existe");
-            }else{
+            } else {
                 throw new UserAlreadyExistsException("Usuário " + user.getCpf() + " já existe");
             }
         }
     }
-    public Optional<User> getByEmail (String email) {
+
+    public Optional<User> getByEmail(String email) {
         log.info("User: " + email);
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Query.Filter filter = new Query.FilterPredicate(PROPERTY_EMAIL, Query.FilterOperator.EQUAL, email);
@@ -180,7 +179,8 @@ public class UserRepository {
             return Optional.empty();
         }
     }
-    public Optional<User> getByCPF (String cpf) {
+
+    public Optional<User> getByCPF(String cpf) {
         log.info("User: " + cpf);
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Query.Filter filter = new Query.FilterPredicate(PROPERTY_CPF, Query.FilterOperator.EQUAL, cpf);
@@ -206,7 +206,7 @@ public class UserRepository {
         return users;
     }
 
-    public User deleteUser (String cpf) throws UserNotFoundException {
+    public User deleteUser(String cpf) throws UserNotFoundException {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Query.Filter userFilter = new Query.FilterPredicate(PROPERTY_CPF, Query.FilterOperator.EQUAL, cpf);
         Query query = new Query(USER_KIND).setFilter(userFilter);
@@ -216,6 +216,36 @@ public class UserRepository {
             return entityToUser(userEntity);
         } else {
             throw new UserNotFoundException("Usuário " + cpf + " não encontrado");
+        }
+    }
+
+    public void updateUserLogin(User user) {
+        boolean canUseCache = true;
+        boolean saveOnCache = true;
+        Cache cache;
+        try {
+            CacheFactory cacheFactory = CacheManager.getInstance().getCacheFactory();
+            cache = cacheFactory.createCache(Collections.emptyMap());
+            if (cache.containsKey(user.getEmail())) {
+                Date lastLogin = (Date)cache.get(user.getEmail());
+                if ((Calendar.getInstance().getTime().getTime() - lastLogin.getTime()) < 30000) {
+                    saveOnCache = false;
+                }
+            }
+            if (saveOnCache) {
+                cache.put(user.getEmail(), (Date)Calendar.getInstance().getTime());
+                canUseCache = false;
+            }
+        } catch (CacheException e) {
+            canUseCache = false;
+        }
+        if (!canUseCache) {
+            user.setLastLogin((Date) Calendar.getInstance().getTime());
+            try {
+                this.updateUser(user, user.getEmail());
+            } catch (UserAlreadyExistsException | UserNotFoundException e) {
+                log.severe("Falha ao atualizar último login do usuário");
+            }
         }
     }
 }

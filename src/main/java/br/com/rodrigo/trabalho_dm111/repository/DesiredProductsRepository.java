@@ -1,12 +1,10 @@
 package br.com.rodrigo.trabalho_dm111.repository;
 
-import br.com.rodrigo.trabalho_dm111.exception.UserAlreadyExistsException;
 import br.com.rodrigo.trabalho_dm111.exception.UserNotFoundException;
 import br.com.rodrigo.trabalho_dm111.model.DesiredProducts;
 import br.com.rodrigo.trabalho_dm111.model.User;
 import com.google.appengine.api.datastore.*;
 import org.springframework.stereotype.Repository;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

@@ -65,8 +65,8 @@ public class UserController {
         }
     }
 
-    @GetMapping("/byemail")
-    public ResponseEntity<User> getUserByEmail(@RequestParam String email, Authentication authentication) {
+    @GetMapping(path = "/byemail")
+    public ResponseEntity<User> getUserByEmail(@RequestParam("email") String email, Authentication authentication) {
         boolean hasRoleAdmin = CheckRole.hasRoleAdmin(authentication);
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         if (hasRoleAdmin || userDetails.getUsername().equals(email)) {
@@ -81,8 +81,8 @@ public class UserController {
         }
     }
 
-    @GetMapping("/bycpf")
-    public ResponseEntity<User> getUserByCPF(@RequestParam String cpf, Authentication authentication) {
+    @GetMapping(path = "/bycpf")
+    public ResponseEntity<User> getUserByCPF(@RequestParam("cpf") String cpf, Authentication authentication) {
         boolean hasRoleAdmin = CheckRole.hasRoleAdmin(authentication);
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Optional<User> user = userRepository.getByCPF(cpf);

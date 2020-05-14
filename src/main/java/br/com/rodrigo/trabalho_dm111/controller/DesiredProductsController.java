@@ -1,6 +1,5 @@
 package br.com.rodrigo.trabalho_dm111.controller;
 
-import br.com.rodrigo.trabalho_dm111.exception.UserAlreadyExistsException;
 import br.com.rodrigo.trabalho_dm111.exception.UserNotFoundException;
 import br.com.rodrigo.trabalho_dm111.model.DesiredProducts;
 import br.com.rodrigo.trabalho_dm111.model.User;
@@ -14,7 +13,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -53,7 +51,7 @@ public class DesiredProductsController {
     }
 
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    @GetMapping(path = "/byCpf")
+    @GetMapping(path = "/bycpf")
     public ResponseEntity<List<DesiredProducts>> getDesiredProductsByCpf(Authentication authentication, @RequestParam("cpf") String cpf) {
         boolean hasRoleAdmin = CheckRole.hasRoleAdmin(authentication);
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
@@ -74,7 +72,7 @@ public class DesiredProductsController {
     }
 
     @DeleteMapping
-    public ResponseEntity<DesiredProducts> deleteUser(@RequestParam("cpf") String cpf, @RequestParam("produtoId") Long productId, Authentication authentication) {
+    public ResponseEntity<DesiredProducts> deleteDesiredProducts(@RequestParam("cpf") String cpf, @RequestParam("produtoId") Long productId, Authentication authentication) {
         try {
             boolean hasRoleAdmin = CheckRole.hasRoleAdmin(authentication);
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
