@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -84,24 +85,26 @@ public class OrderMessageController {
         sentMessages.add(textUpdateProduct);
         String textUser = "Mensagens enviadas:";
         sentMessages.add(textUser);
-        for (User aux : userList) {
-            String txt = "Olá " + aux.getUsername() + " o produto " + productId + " agora custa " + price;
-            String registrationToken = aux.getFcmRegId();
-            try {
-                Message message = Message.builder()
-                        .putData("product", objectMapper.writeValueAsString("txt"))
-                        .setToken(registrationToken)
-                        .build();
 
-                String response = FirebaseMessaging.getInstance().send(message);
-                log.info("Mensagem enviada ao usuario " + aux.getUsername());
-                log.info("Reposta do FCM: " + response);
-                sentMessages.add(txt);
-            } catch (FirebaseMessagingException | JsonProcessingException e) {
-                log.severe("Falha ao enviar mensagem pelo FCM: " + e.getMessage());
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            for (User aux : userList) {
+                String txt = "Olá " + aux.getUsername() + " o produto " + productId + " agora custa " + price;
+                String registrationToken = aux.getFcmRegId();
+                try {
+                    Message message = Message.builder()
+                            .putData("product", objectMapper.writeValueAsString("txt"))
+                            .setToken(registrationToken)
+                            .build();
+
+                    String response = FirebaseMessaging.getInstance().send(message);
+                    log.info("Mensagem enviada ao usuario " + aux.getUsername());
+                    log.info("Reposta do FCM: " + response);
+                    sentMessages.add(txt);
+                } catch (FirebaseMessagingException | JsonProcessingException e) {
+                    log.severe("Falha ao enviar mensagem pelo FCM: " + e.getMessage());
+                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                }
             }
-        }
+
         return new ResponseEntity<List<String>>(sentMessages, HttpStatus.OK);
     }
 

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,15 +36,16 @@ public class ProductController {
     public ResponseEntity<List<String>> updateProduct(@RequestParam("productId") Long productId, @RequestParam("price") Double price) throws JsonProcessingException {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Query.Filter filterByProductId = new Query.FilterPredicate("productId", Query.FilterOperator.EQUAL, productId);
-        Query.Filter filterByPrice = new Query.FilterPredicate("desiredPrice", Query.FilterOperator.GREATER_THAN_OR_EQUAL, price);
-        Query.Filter filterUnion = Query.CompositeFilterOperator.and(filterByProductId, filterByPrice);
         Query query = new Query("DesiredProducts").setFilter(filterByProductId);
         List<Entity> desiredProductsEntity = datastore.prepare(query).asList(FetchOptions.Builder.withDefaults());
         List<User> userList = new ArrayList<User>();
         for (Entity aux : desiredProductsEntity) {
-            User user = new User();
-            user = userRepository.getByCPF((String) aux.getProperty("cpf")).get();
-            userList.add(user);
+            User user;
+            Double oldPrice = (Double) aux.getProperty("desiredPrice");
+            if (price <= oldPrice) {
+                user = userRepository.getByCPF((String) aux.getProperty("cpf")).get();
+                userList.add(user);
+            }
         }
         return orderMessageController.sendMessagePrice(userList, productId, price);
     }
